@@ -17,6 +17,9 @@ EXTENSIONS = {
 DOWNLOADER_MIDDLEWARES = {
     'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None
     }
-
+ITEM_PIPELINES = {
+	'doubancrawl.pipelines.DoubancrawlPipeline': 300
+}
+	
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'doubancrawl (+http://www.yourdomain.com)'

@@ -6,6 +6,7 @@ import md5
 import re
 import locale
 import os
+from doubancrawl.items import DoubancrawlItem
 
 def isMovieUrl(url):
     if re.match('.*\/\/movie\.douban\.com\/subject\/\d+\/.*', url) != None:
@@ -39,14 +40,15 @@ class DbanSpider(Spider):
     name = "dban"
     allowed_domains = ["douban.com"]
     start_urls = (
-        'http://movie.douban.com/',
+        #'http://movie.douban.com/',
+        'http://www.baidu.com/',
         )		
     id_gen = md5.new()
     url_visited = {}
     url_scheduled = {}
    
     def parse(self, response):
-        
+        print "******************************"
         self.id_gen.update(response.url)
         tmfilename = self.id_gen.hexdigest()
         if tmfilename in self.url_visited:
@@ -55,6 +57,10 @@ class DbanSpider(Spider):
         self.url_visited[tmfilename] = response.url
 
         sel = Selector(response)
+        item = DoubancrawlItem()
+        item['name'] = "ljj"
+        item['age']=42
+        yield item
         links = sel.xpath("//a[@href and text()]")
         
 ##        flink = open("lnk.txt", "w")
@@ -73,7 +79,7 @@ class DbanSpider(Spider):
                     continue
                 self.url_scheduled[id] = href
                 if ut != UT_MOVIE:
-                    yield Request(href)
+#                    yield Request(href)
                     continue
                 else:
                     suffixIdx = href.find("?")
@@ -82,7 +88,7 @@ class DbanSpider(Spider):
                         self.id_gen.update(href)
                         id = self.id_gen.hexdigest()
                         self.url_scheduled[id] = href
-                    yield Request(href, callback=self.parseMoviePage)                                   
+                    #yield Request(href, callback=self.parseMoviePage)                                   
 ##                    flink.write(text.encode('utf-8', 'ignore')+"\n")
 ##                    flink.write(href.encode('utf-8', 'ignore') + "\n")
 ##        print "ljw cnt: ", len(links)
