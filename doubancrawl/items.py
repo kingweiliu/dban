@@ -8,4 +8,6 @@ from scrapy.item import Item, Field
 class DoubancrawlItem(Item):
     # define the fields for your item here like:
     # name = Field()
+    name = Field()
+    age = Field()
     pass

@@ -5,4 +5,5 @@
 
 class DoubancrawlPipeline(object):
     def process_item(self, item, spider):
+		print "ljw"
         return item

@@ -10,6 +10,13 @@ BOT_NAME = 'doubancrawl'
 
 SPIDER_MODULES = ['doubancrawl.spiders']
 NEWSPIDER_MODULE = 'doubancrawl.spiders'
+EXTENSIONS = {
+    'scrapy.contrib.corestats.CoreStats': None
+    }
+
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None
+    }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'doubancrawl (+http://www.yourdomain.com)'
