@@ -5,9 +5,19 @@
 
 from scrapy.item import Item, Field
 
-class DoubancrawlItem(Item):
+class MovieItem(Item):
     # define the fields for your item here like:
-    # name = Field()
+
+    id = Field()
     name = Field()
-    age = Field()
-    pass
+    desc = Field()
+    info = Field()
+    img = Field()
+    tags = Field()
+    
+    
+
+class qtfyItem(Item):
+    name = Field()
+    description = Field()
+    

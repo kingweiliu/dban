@@ -6,10 +6,17 @@ import md5
 import re
 import locale
 import os
-from doubancrawl.items import DoubancrawlItem
+from doubancrawl.items import MovieItem
+from scrapy.shell import inspect_response
+from scrapy.utils.request import request_fingerprint
 
 def isMovieUrl(url):
     if re.match('.*\/\/movie\.douban\.com\/subject\/\d+\/.*', url) != None:
+        return True
+    return False
+
+def isMovieDomain(url):
+    if re.match("http:\/\/movie\.douban\.com.*", url) != None:
         return True
     return False
 
@@ -28,79 +35,76 @@ def urlType(url):
         else:
             return UT_NOMOVIE   #not movie.douban.com
     return UT_MOVIE_OTHER
-##    
-##                
-##            
-##    
-##    if re.match('http:\/\/movie\.douban\.com\/subject\/\d+', url) != None:
-##        return UT_MOVIE
-    return 0
 
 class DbanSpider(Spider):
     name = "dban"
-    allowed_domains = ["douban.com"]
+    allowed_domains = ["movie.douban.com"]
     start_urls = (
-        #'http://movie.douban.com/',
-        'http://www.baidu.com/',
-        )		
-    id_gen = md5.new()
-    url_visited = {}
-    url_scheduled = {}
+        'http://movie.douban.com/',
+        #'http://www.baidu.com/',
+        )
+
+
+        
    
     def parse(self, response):
         print "******************************"
-        self.id_gen.update(response.url)
-        tmfilename = self.id_gen.hexdigest()
-        if tmfilename in self.url_visited:
-            return
-        open(os.path.join("page", tmfilename), 'wb').write(response.body)
-        self.url_visited[tmfilename] = response.url
-
+        mi = MovieItem()
+##        mi['id'] = "abc"  #request_fingerprint(response.request)
+##        mi['name'] = "de f"   # sel.xpath('//*[@id="content"]/h1/span[1]/text()').extract()[0]
+##        mi['desc'] = "desc"
+##        mi['tags'] = "tags"
+##        mi["info"] = "into"
+##        mi['img'] = "img"
+##        print "end*************"
+##        return mi
+    
         sel = Selector(response)
-        item = DoubancrawlItem()
-        item['name'] = "ljj"
-        item['age']=42
-        yield item
         links = sel.xpath("//a[@href and text()]")
-        
-##        flink = open("lnk.txt", "w")
-        print "locale:", locale.getdefaultlocale()
         for si in links:
             href = si.xpath("@href").extract()[0]
             text = si.xpath("text()").extract()[0]
+            if not isMovieDomain(href):
+                continue            
+                   
 
             ut = urlType(href)
-            if ut == UT_NOMOVIE:
-                continue
+            if ut != UT_MOVIE:
+                yield Request(href)                
             else:
-                self.id_gen.update(href)
-                id = self.id_gen.hexdigest()
-                if id in self.url_scheduled:
-                    continue
-                self.url_scheduled[id] = href
-                if ut != UT_MOVIE:
-#                    yield Request(href)
-                    continue
-                else:
-                    suffixIdx = href.find("?")
-                    if suffixIdx != -1 :
-                        href = href[0:suffixIdx]
-                        self.id_gen.update(href)
-                        id = self.id_gen.hexdigest()
-                        self.url_scheduled[id] = href
-                    #yield Request(href, callback=self.parseMoviePage)                                   
-##                    flink.write(text.encode('utf-8', 'ignore')+"\n")
-##                    flink.write(href.encode('utf-8', 'ignore') + "\n")
-##        print "ljw cnt: ", len(links)
-##        flink.close()
+##                suffixIdx = href.find("?")
+##                if suffixIdx != -1 :
+##                    href = href[0:suffixIdx]
+##                    urlid = self.urlId(href)                    
+   
+                yield Request(href, callback=self.parseMoviePage)                                   
+
 
     def parseMoviePage(self, response):
-        print "parseMoviePage"
-        pass
-
+        sel = Selector(response)
+        mi = MovieItem()
+        mi['id'] = request_fingerprint(response.request)
+        mi['name'] = sel.xpath('//*[@id="content"]/h1/span[1]/text()').extract()[0]
+        mi['desc'] = ""
+        for n in sel.xpath('//*[@id="link-report"]/span[1]/node()').extract():
+            mi['desc'] += n
+        
+        mi['img'] = sel.xpath('//*[@id="mainpic"]/a/img/@src').extract()[0]
+        strTags = sel.xpath('//*[@class="tags-body"]/a/text()').extract()
+        mi['tags'] = ""
+        for str in strTags:
+            mi['tags'] += str+","
+        mi["info"] = ""
+        for info in sel.xpath('//*[@id="info"]/node()').extract():
+            mi['info'] += info
+        #inspect_response(response, self)
+        yield mi
+        #return self.parse(response)
     
 if __name__ == "__main__":
-    a= ['http://movie.douban.com/category/', 'http://movie.douban.com/subject/25715087/', 'http://www.jb51.net/article/17849.htm',
+    a= ['http://movie.douban.com/category/',
+        'http://movie.douban.com/subject/25715087/',
+        'http://www.jb51.net/article/17849.htm',
         'http://movie.douban.com/people/79362936/',
         'http://movie.douban.com/subject/6973460/?from=showing']
     for url in a:
