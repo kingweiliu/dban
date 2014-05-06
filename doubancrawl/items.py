@@ -18,6 +18,10 @@ class MovieItem(Item):
     
 
 class qtfyItem(Item):
+    id = Field()
+    url = Field()
     name = Field()
-    description = Field()
-    
+    desc = Field()
+    info = Field()
+    img = Field()
+    links = Field()    
