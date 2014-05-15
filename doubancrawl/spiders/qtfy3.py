@@ -6,13 +6,17 @@ from scrapy.shell import inspect_response
 from doubancrawl.items import qtfyItem
 import md5
 
+from scrapy.utils.request import request_fingerprint
+
 class Qtfy3Spider(CrawlSpider):
     name = 'qtfy3'
     allowed_domains = ['www.qtfy30.cn']
-    start_urls = ['http://www.qtfy30.cn/']
+    start_urls = ['http://www.qtfy30.cn']
 
     rules = (
-        Rule(SgmlLinkExtractor(r"ysyl\/\d+.html"), callback='parse_item', follow=True),
+        Rule(SgmlLinkExtractor(r"ysyl\/\d+.html$"), callback='parse_item', follow=True),
+        Rule(SgmlLinkExtractor(r"mjxz\/\d+.html$"), callback='parse_item', follow=True),
+        Rule(SgmlLinkExtractor(r"hjxz\/\d+.html$"), callback='parse_item', follow=True),        
         Rule(SgmlLinkExtractor(r"page\/d+"))
     )
 
@@ -26,8 +30,9 @@ class Qtfy3Spider(CrawlSpider):
         print "ljw: *****************"
         print response.url
         item = qtfyItem()
-        tp = md5.new(response.url)
-        item["id"] = tp.hexdigest()
+        #tp = md5.new(response.url)
+        #item["id"] = tp.hexdigest()
+        item["id"] = request_fingerprint(response.request)
         item["url"] = response.url
         item["name"] = response.xpath("//h2/text()").extract()[0]
         entry = response.xpath('//div[@class="entry"]/p')
@@ -35,6 +40,9 @@ class Qtfy3Spider(CrawlSpider):
         item["desc"] = entry[0].xpath("text()").extract()[0]
          
         infos = entry[1].xpath("node()").extract()
+        if len(infos) < 3:
+            infos = entry[2].xpath("node()").extract()
+
         item["info"] = reduce((lambda x, y: x+y), infos)
         item["img"] = entry.xpath('img/@src').extract()[0]
         
